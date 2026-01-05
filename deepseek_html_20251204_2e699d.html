@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor de Video a Spritesheet</title>
+    <meta name="google-site-verification" content="rik5kdSrciYaWLP_laKYL4-Dp6lf3Neu6FL5PLzWxfA" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #4cc9f0;
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #a9a9a9;
+            font-size: 1.1rem;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background-color: #16213e;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel h2 {
+            color: #4cc9f0;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #2d4059;
+            padding-bottom: 10px;
+        }
+        
+        .input-area {
+            margin-bottom: 20px;
+        }
+        
+        .file-input-container {
+            border: 2px dashed #4cc9f0;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-input-container:hover {
+            background-color: rgba(76, 201, 240, 0.1);
+        }
+        
+        .file-input-container input {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .file-input-label i {
+            font-size: 48px;
+            color: #4cc9f0;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #a9a9a9;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #2d4059;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4cc9f0;
+            cursor: pointer;
+        }
+        
+        .range-value {
+            font-size: 0.9rem;
+            color: #4cc9f0;
+            text-align: center;
+        }
+        
+        .button {
+            background-color: #4cc9f0;
+            color: #16213e;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background-color: #3aa8d8;
+            transform: translateY(-2px);
+        }
+        
+        .button:disabled {
+            background-color: #2d4059;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button-secondary {
+            background-color: #2d4059;
+            color: #e6e6e6;
+        }
+        
+        .button-secondary:hover {
+            background-color: #3a506b;
+        }
+        
+        .video-container {
+            width: 100%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #videoPlayer {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            background-color: #000;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        #spritesheetCanvas {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            background-color: #0f0f1a;
+            border: 1px solid #2d4059;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #28a745;
+        }
+        
+        .status.error {
+            background-color: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        .status.info {
+            background-color: rgba(23, 162, 184, 0.2);
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+        }
+        
+        .frame-count {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: #a9a9a9;
+            font-size: 0.9rem;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #2d4059;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #4cc9f0;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #2d4059;
+            color: #a9a9a9;
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #2d4059;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #a9a9a9;
+            line-height: 1.5;
+        }
+        
+        .instructions h3 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-film"></i> Convertidor de Video a Spritesheet</h1>
+        <p class="subtitle">Sube un video, extrae los frames y genera un spritesheet para exportar como PNG</p>
+    </header>
+    
+    <div class="container">
+        <div class="panel">
+            <h2><i class="fas fa-upload"></i> Subir Video</h2>
+            
+            <div class="input-area">
+                <div class="file-input-container" id="dropArea">
+                    <label for="videoInput" class="file-input-label">
+                        <i class="fas fa-video"></i>
+                        <span>Haz clic para seleccionar un video o arrástralo aquí</span>
+                        <span style="font-size: 0.8rem; margin-top: 10px;">Formatos soportados: MP4, WebM, OGG, AVI, MOV</span>
+                    </label>
+                    <input type="file" id="videoInput" accept="video/*">
+                </div>
+                
+                <div class="video-container">
+                    <video id="videoPlayer" controls></video>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="frameSkip">Frames a saltar: <span id="skipValue">5</span></label>
+                    <input type="range" id="frameSkip" min="1" max="30" value="5">
+                    <div class="range-value">Un valor más alto reduce el número de frames extraídos (spritesheet más pequeño)</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="columns">Columnas en el spritesheet: <span id="columnsValue">10</span></label>
+                    <input type="range" id="columns" min="1" max="20" value="10">
+                    <div class="range-value">Define cuántas columnas tendrá la hoja de sprites</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="frameWidth">Ancho de cada frame (px): <span id="widthValue">160</span></label>
+                    <input type="range" id="frameWidth" min="50" max="400" value="160" step="10">
+                    <div class="range-value">El alto se calculará automáticamente para mantener la proporción</div>
+                </div>
+            </div>
+            
+            <button id="generateBtn" class="button" disabled>
+                <i class="fas fa-cogs"></i> Generar Spritesheet
+            </button>
+            
+            <div class="progress-container" id="progressContainer">
+                <div>Procesando frames: <span id="progressText">0%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <div class="status" id="statusMessage">
+                Mensaje de estado
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Instrucciones:</h3>
+                <ul>
+                    <li>Sube un video desde tu dispositivo</li>
+                    <li>Ajusta los parámetros de extracción según tus necesidades</li>
+                    <li>Haz clic en "Generar Spritesheet" para procesar el video</li>
+                    <li>Una vez generado, podrás descargar el spritesheet como PNG</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2><i class="fas fa-image"></i> Spritesheet Generado</h2>
+            
+            <div class="canvas-container">
+                <canvas id="spritesheetCanvas"></canvas>
+                <div class="frame-count">
+                    <span>Frames extraídos: <span id="extractedFrames">0</span></span>
+                    <span>Tamaño del spritesheet: <span id="spritesheetSize">0x0</span></span>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div><i class="fas fa-clock"></i> Tiempo de procesamiento: <span id="processingTime">0s</span></div>
+                <div><i class="fas fa-hdd"></i> Tamaño estimado: <span id="estimatedSize">0 KB</span></div>
+            </div>
+            
+            <div class="export-options" id="exportOptions" style="display: none;">
+                <button id="downloadBtn" class="button">
+                    <i class="fas fa-download"></i> Descargar PNG
+                </button>
+                <button id="previewBtn" class="button button-secondary">
+                    <i class="fas fa-eye"></i> Vista Previa Completa
+                </button>
+                <button id="resetBtn" class="button button-secondary">
+                    <i class="fas fa-redo"></i> Reiniciar
+                </button>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-lightbulb"></i> Consejos:</h3>
+                <ul>
+                    <li>Para videos largos, aumenta el valor de "Frames a saltar" para reducir el tamaño</li>
+                    <li>Un mayor ancho de frame produce imágenes de mejor calidad pero más pesadas</li>
+                    <li>La proporción original del video se mantendrá en cada frame</li>
+                    <li>Puedes previsualizar el spritesheet completo haciendo clic en "Vista Previa Completa"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Convertidor de Video a Spritesheet &copy; 2023 | Hecho con <i class="fas fa-heart" style="color: #e25555;"></i> para desarrolladores y creadores de juegos</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const videoInput = document.getElementById('videoInput');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const previewBtn = document.getElementById('previewBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const spritesheetCanvas = document.getElementById('spritesheetCanvas');
+            const dropArea = document.getElementById('dropArea');
+            const exportOptions = document.getElementById('exportOptions');
+            const statusMessage = document.getElementById('statusMessage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            // Elementos de valores
+            const skipValue = document.getElementById('skipValue');
+            const columnsValue = document.getElementById('columnsValue');
+            const widthValue = document.getElementById('widthValue');
+            const extractedFrames = document.getElementById('extractedFrames');
+            const spritesheetSize = document.getElementById('spritesheetSize');
+            const processingTime = document.getElementById('processingTime');
+            const estimatedSize = document.getElementById('estimatedSize');
+            
+            // Controles
+            const frameSkip = document.getElementById('frameSkip');
+            const columns = document.getElementById('columns');
+            const frameWidth = document.getElementById('frameWidth');
+            
+            // Variables de estado
+            let videoFrames = [];
+            let videoDuration = 0;
+            let videoFrameRate = 0;
+            let totalFrames = 0;
+            let isProcessing = false;
+            let spritesheetGenerated = false;
+            let frameHeight = 0;
+            let startTime = 0;
+            
+            // Configurar arrastrar y soltar
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = 'rgba(76, 201, 240, 0.2)';
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.style.backgroundColor = '';
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = '';
+                
+                if (e.dataTransfer.files.length) {
+                    videoInput.files = e.dataTransfer.files;
+                    handleVideoUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Manejar la subida de video
+            videoInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    handleVideoUpload(this.files[0]);
+                }
+            });
+            
+            function handleVideoUpload(file) {
+                // Verificar que sea un video
+                if (!file.type.startsWith('video/')) {
+                    showStatus('Por favor, selecciona un archivo de video válido', 'error');
+                    return;
+                }
+                
+                // Crear URL para el video
+                const videoURL = URL.createObjectURL(file);
+                videoPlayer.src = videoURL;
+                
+                // Habilitar el botón de generación
+                generateBtn.disabled = false;
+                
+                // Mostrar mensaje de éxito
+                showStatus(`Video "${file.name}" cargado correctamente`, 'success');
+                
+                // Reiniciar estado
+                resetSpritesheet();
+            }
+            
+            // Actualizar valores de los controles deslizantes
+            frameSkip.addEventListener('input', function() {
+                skipValue.textContent = this.value;
+            });
+            
+            columns.addEventListener('input', function() {
+                columnsValue.textContent = this.value;
+            });
+            
+            frameWidth.addEventListener('input', function() {
+                widthValue.textContent = this.value;
+            });
+            
+            // Generar spritesheet
+            generateBtn.addEventListener('click', generateSpritesheet);
+            
+            // Descargar spritesheet
+            downloadBtn.addEventListener('click', function() {
+                if (!spritesheetGenerated) return;
+                
+                const link = document.createElement('a');
+                link.download = `spritesheet_${Date.now()}.png`;
+                link.href = spritesheetCanvas.toDataURL('image/png');
+                link.click();
+                
+                showStatus('Spritesheet descargado como PNG', 'success');
+            });
+            
+            // Vista previa completa
+            previewBtn.addEventListener('click', function() {
+                if (!spritesheetGenerated) return;
+                
+                const image = new Image();
+                image.src = spritesheetCanvas.toDataURL('image/png');
+                
+                const win = window.open('');
+                win.document.write(`<img src="${image.src}" style="max-width: 100%;">`);
+            });
+            
+            // Reiniciar
+            resetBtn.addEventListener('click', function() {
+                resetSpritesheet();
+                showStatus('Listo para procesar un nuevo video', 'info');
+            });
+            
+            // Función principal para generar el spritesheet
+            async function generateSpritesheet() {
+                if (isProcessing || !videoPlayer.src) return;
+                
+                // Inicializar variables
+                videoFrames = [];
+                isProcessing = true;
+                spritesheetGenerated = false;
+                startTime = Date.now();
+                
+                // Mostrar progreso
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+                
+                // Deshabilitar controles durante el procesamiento
+                generateBtn.disabled = true;
+                videoInput.disabled = true;
+                
+                // Obtener parámetros
+                const skip = parseInt(frameSkip.value);
+                const cols = parseInt(columns.value);
+                const frameW = parseInt(frameWidth.value);
+                
+                // Calcular frame height basado en la proporción del video
+                frameHeight = Math.floor(frameW * (videoPlayer.videoHeight / videoPlayer.videoWidth));
+                
+                // Mostrar información de procesamiento
+                showStatus('Extrayendo frames del video...', 'info');
+                
+                try {
+                    // Extraer frames del video
+                    await extractVideoFrames(skip, frameW, frameHeight);
+                    
+                    // Generar spritesheet con los frames extraídos
+                    generateSpritesheetFromFrames(cols, frameW, frameHeight);
+                    
+                    // Calcular tiempo de procesamiento
+                    const endTime = Date.now();
+                    const elapsedTime = ((endTime - startTime) / 1000).toFixed(2);
+                    processingTime.textContent = `${elapsedTime}s`;
+                    
+                    // Mostrar opciones de exportación
+                    exportOptions.style.display = 'flex';
+                    
+                    // Mostrar mensaje de éxito
+                    showStatus(`Spritesheet generado con éxito (${videoFrames.length} frames)`, 'success');
+                    
+                    spritesheetGenerated = true;
+                    
+                } catch (error) {
+                    console.error('Error generando spritesheet:', error);
+                    showStatus('Error al generar el spritesheet: ' + error.message, 'error');
+                } finally {
+                    isProcessing = false;
+                    generateBtn.disabled = false;
+                    videoInput.disabled = false;
+                }
+            }
+            
+            // Extraer frames del video
+            async function extractVideoFrames(skipFrames, frameW, frameH) {
+                return new Promise((resolve, reject) => {
+                    // Crear canvas temporal para extraer frames
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCanvas.width = frameW;
+                    tempCanvas.height = frameH;
+                    
+                    // Configurar evento para cuando el video esté listo
+                    videoPlayer.addEventListener('seeked', function onSeeked() {
+                        // Dibujar el frame actual en el canvas temporal
+                        tempCtx.drawImage(videoPlayer, 0, 0, frameW, frameH);
+                        
+                        // Agregar frame a la lista
+                        const frameData = tempCanvas.toDataURL('image/png');
+                        videoFrames.push(frameData);
+                        
+                        // Actualizar progreso
+                        const progress = Math.floor((videoFrames.length / totalFrames) * 100);
+                        progressFill.style.width = `${progress}%`;
+                        progressText.textContent = `${progress}%`;
+                        
+                        // Buscar el siguiente frame si aún no hemos terminado
+                        if (videoFrames.length < totalFrames) {
+                            // Calcular el tiempo para el siguiente frame
+                            const nextTime = (videoFrames.length * skipFrames) / videoFrameRate;
+                            videoPlayer.currentTime = nextTime;
+                        } else {
+                            // Terminamos de extraer todos los frames
+                            videoPlayer.removeEventListener('seeked', onSeeked);
+                            videoPlayer.currentTime = 0;
+                            resolve();
+                        }
+                    });
+                    
+                    // Calcular frames totales a extraer
+                    videoDuration = videoPlayer.duration;
+                    videoFrameRate = 30; // Asumimos 30 FPS por defecto
+                    totalFrames = Math.floor(videoDuration * videoFrameRate / skipFrames);
+                    
+                    // Asegurarnos de no extraer demasiados frames
+                    if (totalFrames > 300) {
+                        totalFrames = 300; // Límite para evitar problemas de rendimiento
+                    }
+                    
+                    // Actualizar UI con información de frames
+                    extractedFrames.textContent = '0';
+                    
+                    // Comenzar la extracción desde el primer frame
+                    videoPlayer.currentTime = 0;
+                });
+            }
+            
+            // Generar spritesheet a partir de los frames extraídos
+            function generateSpritesheetFromFrames(cols, frameW, frameH) {
+                // Calcular dimensiones del spritesheet
+                const rows = Math.ceil(videoFrames.length / cols);
+                const sheetWidth = cols * frameW;
+                const sheetHeight = rows * frameH;
+                
+                // Configurar canvas del spritesheet
+                spritesheetCanvas.width = sheetWidth;
+                spritesheetCanvas.height = sheetHeight;
+                
+                const ctx = spritesheetCanvas.getContext('2d');
+                
+                // Rellenar fondo
+                ctx.fillStyle = '#0f0f1a';
+                ctx.fillRect(0, 0, sheetWidth, sheetHeight);
+                
+                // Dibujar cada frame en su posición correspondiente
+                let frameIndex = 0;
+                
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (frameIndex >= videoFrames.length) break;
+                        
+                        const x = col * frameW;
+                        const y = row * frameH;
+                        
+                        // Crear imagen a partir de los datos del frame
+                        const img = new Image();
+                        img.src = videoFrames[frameIndex];
+                        
+                        // Dibujar la imagen en el canvas
+                        img.onload = function() {
+                            ctx.drawImage(img, x, y, frameW, frameH);
+                            
+                            // Dibujar borde alrededor del frame
+                            ctx.strokeStyle = 'rgba(76, 201, 240, 0.3)';
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(x, y, frameW, frameH);
+                            
+                            // Actualizar contador de frames
+                            extractedFrames.textContent = videoFrames.length;
+                            spritesheetSize.textContent = `${sheetWidth}x${sheetHeight}`;
+                            
+                            // Estimar tamaño del archivo PNG
+                            const dataURL = spritesheetCanvas.toDataURL('image/png');
+                            const sizeKB = Math.round(dataURL.length * 0.75 / 1024);
+                            estimatedSize.textContent = `${sizeKB} KB`;
+                        };
+                        
+                        frameIndex++;
+                    }
+                }
+            }
+            
+            // Mostrar mensajes de estado
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = `status ${type}`;
+                statusMessage.style.display = 'block';
+                
+                // Ocultar mensaje después de 5 segundos (excepto para errores)
+                if (type !== 'error') {
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 5000);
+                }
+            }
+            
+            // Reiniciar el spritesheet
+            function resetSpritesheet() {
+                // Limpiar canvas
+                const ctx = spritesheetCanvas.getContext('2d');
+                ctx.clearRect(0, 0, spritesheetCanvas.width, spritesheetCanvas.height);
+                
+                // Restablecer valores
+                spritesheetCanvas.width = 800;
+                spritesheetCanvas.height = 400;
+                
+                // Restablecer UI
+                extractedFrames.textContent = '0';
+                spritesheetSize.textContent = '0x0';
+                processingTime.textContent = '0s';
+                estimatedSize.textContent = '0 KB';
+                
+                // Ocultar opciones de exportación
+                exportOptions.style.display = 'none';
+                progressContainer.style.display = 'none';
+                
+                // Restablecer variables
+                videoFrames = [];
+                spritesheetGenerated = false;
+                
+                // Mostrar canvas vacío
+                ctx.fillStyle = '#0f0f1a';
+                ctx.fillRect(0, 0, spritesheetCanvas.width, spritesheetCanvas.height);
+                ctx.fillStyle = '#4cc9f0';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Spritesheet aparecerá aquí', spritesheetCanvas.width/2, spritesheetCanvas.height/2);
+                ctx.font = '16px Arial';
+                ctx.fillText('Genera un spritesheet desde un video', spritesheetCanvas.width/2, spritesheetCanvas.height/2 + 30);
+            }
+            
+            // Inicializar con canvas vacío
+            resetSpritesheet();
+        });
+    </script>
+</body>
+</html>
